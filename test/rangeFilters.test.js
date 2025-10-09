@@ -19,10 +19,7 @@ describe("Range Inputs and Sliders", () => {
       const initialCount = initialMatch ? parseInt(initialMatch[1].replace(",", "")) : 0;
 
       // Enter minimum price
-      await expect(page).toFill(
-        '#price-range-input form input[type=number][placeholder="1"]',
-        "100"
-      );
+      await expect(page).toFill('#price-range-input form input[type=number][placeholder="1"]', "100");
 
       // Submit the form (press Enter or click Go button)
       await page.keyboard.press("Enter");
@@ -42,10 +39,7 @@ describe("Range Inputs and Sliders", () => {
 
     it("filters results when max value is entered", async () => {
       // Enter maximum price
-      await expect(page).toFill(
-        '#price-range-input form input[type=number][placeholder="900"]',
-        "200"
-      );
+      await expect(page).toFill('#price-range-input form input[type=number][placeholder="900"]', "200");
 
       // Submit the form
       await page.keyboard.press("Enter");
@@ -64,16 +58,10 @@ describe("Range Inputs and Sliders", () => {
 
     it("filters results when both min and max values are entered", async () => {
       // Enter minimum price
-      await expect(page).toFill(
-        '#price-range-input form input[type=number][placeholder="1"]',
-        "50"
-      );
+      await expect(page).toFill('#price-range-input form input[type=number][placeholder="1"]', "50");
 
       // Enter maximum price
-      await expect(page).toFill(
-        '#price-range-input form input[type=number][placeholder="900"]',
-        "150"
-      );
+      await expect(page).toFill('#price-range-input form input[type=number][placeholder="900"]', "150");
 
       // Submit the form
       await page.keyboard.press("Enter");
@@ -102,13 +90,13 @@ describe("Range Inputs and Sliders", () => {
 
       // Check that range input min/max might have changed
       const minPlaceholder = await page.$eval(
-        '#price-range-input form input[type=number]:first-child',
-        (el) => el.placeholder
+        "#price-range-input form input[type=number]:first-child",
+        (el) => el.placeholder,
       );
-      
+
       const maxPlaceholder = await page.$eval(
-        '#price-range-input form input[type=number]:last-child',
-        (el) => el.placeholder
+        "#price-range-input form input[type=number]:last-child",
+        (el) => el.placeholder,
       );
 
       // Placeholders should be valid numbers
@@ -132,11 +120,11 @@ describe("Range Inputs and Sliders", () => {
 
       // Find the slider handle
       const minHandle = await page.$('#price-range-slider div[aria-valuenow="1"]');
-      
+
       if (minHandle) {
         // Get the bounding box of the slider
         const sliderBox = await minHandle.boundingBox();
-        
+
         if (sliderBox) {
           // Move the slider handle to the right (increase minimum)
           await page.mouse.move(sliderBox.x + sliderBox.width / 2, sliderBox.y + sliderBox.height / 2);
@@ -161,10 +149,10 @@ describe("Range Inputs and Sliders", () => {
     it("shows current refinement when slider is adjusted", async () => {
       // Find the max slider handle
       const maxHandle = await page.$('#price-range-slider div[aria-valuenow="900"]');
-      
+
       if (maxHandle) {
         const sliderBox = await maxHandle.boundingBox();
-        
+
         if (sliderBox) {
           // Move the slider handle to the left (decrease maximum)
           await page.mouse.move(sliderBox.x + sliderBox.width / 2, sliderBox.y + sliderBox.height / 2);
@@ -176,10 +164,7 @@ describe("Range Inputs and Sliders", () => {
           await page.waitForTimeout(1000);
 
           // Check that current refinements appears
-          const hasRefinement = await page.$eval(
-            "#current-refinements",
-            (el) => el.textContent.trim().length > 0
-          );
+          const hasRefinement = await page.$eval("#current-refinements", (el) => el.textContent.trim().length > 0);
 
           // Should show a refinement (though this might not always be the case)
           expect(hasRefinement).toBeTruthy();
@@ -277,10 +262,7 @@ describe("Range Inputs and Sliders", () => {
       const searchCount = searchMatch ? parseInt(searchMatch[1].replace(",", "")) : 0;
 
       // Apply price range filter
-      await expect(page).toFill(
-        '#price-range-input form input[type=number][placeholder="1"]',
-        "50"
-      );
+      await expect(page).toFill('#price-range-input form input[type=number][placeholder="1"]', "50");
       await page.keyboard.press("Enter");
 
       // Wait for results to update

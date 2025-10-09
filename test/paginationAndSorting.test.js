@@ -8,19 +8,15 @@ describe("Pagination and Sorting", () => {
   describe("Pagination", () => {
     it("displays correct number of pages", async () => {
       await page.waitForSelector("#pagination a.ais-Pagination-link");
-      const links = await page.$$eval(
-        "#pagination a.ais-Pagination-link",
-        (elements) => elements.length
-      );
+      const links = await page.$$eval("#pagination a.ais-Pagination-link", (elements) => elements.length);
       // Should have page numbers + prev/next buttons
       expect(links).toBeGreaterThan(2);
     });
 
     it("navigates to next page when clicked", async () => {
       // Get first hit on page 1
-      const firstHitPage1 = await page.$eval(
-        "#hits .ais-Hits-item:first-child .hit-name",
-        (el) => el.textContent.trim()
+      const firstHitPage1 = await page.$eval("#hits .ais-Hits-item:first-child .hit-name", (el) =>
+        el.textContent.trim(),
       );
 
       // Click next page
@@ -30,9 +26,8 @@ describe("Pagination and Sorting", () => {
       await page.waitForTimeout(500);
 
       // Get first hit on page 2
-      const firstHitPage2 = await page.$eval(
-        "#hits .ais-Hits-item:first-child .hit-name",
-        (el) => el.textContent.trim()
+      const firstHitPage2 = await page.$eval("#hits .ais-Hits-item:first-child .hit-name", (el) =>
+        el.textContent.trim(),
       );
 
       // Results should be different
@@ -55,16 +50,13 @@ describe("Pagination and Sorting", () => {
     it("updates when filters are applied", async () => {
       // Apply a filter that reduces results
       await expect(page).toFill("#searchbox input[type=search]", "Samsung");
-      
+
       // Wait for results to update
       await page.waitForTimeout(500);
 
       // Get pagination links after filtering
       await page.waitForSelector("#pagination a.ais-Pagination-link");
-      const linksAfterFilter = await page.$$eval(
-        "#pagination a.ais-Pagination-link",
-        (elements) => elements.length
-      );
+      const linksAfterFilter = await page.$$eval("#pagination a.ais-Pagination-link", (elements) => elements.length);
 
       // Should have fewer pages than before (or at least some pages)
       expect(linksAfterFilter).toBeGreaterThan(0);
@@ -73,13 +65,6 @@ describe("Pagination and Sorting", () => {
 
   describe("Sorting", () => {
     it("changes results when sort order is changed", async () => {
-      // Get first result with default sorting
-      await page.waitForSelector("#hits .ais-Hits-item");
-      const firstResultDefault = await page.$eval(
-        "#hits .ais-Hits-item:first-child .hit-name",
-        (el) => el.textContent.trim()
-      );
-
       // Change sort to price ascending
       await expect(page).toSelect("#sort-by select.ais-SortBy-select", "products/sort/price:asc");
 
@@ -87,13 +72,11 @@ describe("Pagination and Sorting", () => {
       await page.waitForTimeout(500);
 
       // Get first result with price sorting
-      const firstResultPriceAsc = await page.$eval(
-        "#hits .ais-Hits-item:first-child .hit-name",
-        (el) => el.textContent.trim()
+      const firstResultPriceAsc = await page.$eval("#hits .ais-Hits-item:first-child .hit-name", (el) =>
+        el.textContent.trim(),
       );
 
-      // Results should likely be different (unless by coincidence)
-      // At minimum, we should have results displayed
+      // Results should be displayed
       expect(firstResultPriceAsc).toBeTruthy();
     });
 
@@ -106,13 +89,13 @@ describe("Pagination and Sorting", () => {
 
       // Verify results are displayed
       await expect(page).toMatchElement("#hits .ais-Hits-item");
-      
+
       // Get the selected option
       const selectedOption = await page.$eval(
         "#sort-by select.ais-SortBy-select",
-        (el) => el.options[el.selectedIndex].text
+        (el) => el.options[el.selectedIndex].text,
       );
-      
+
       expect(selectedOption).toBe("Price (desc)");
     });
 
@@ -132,9 +115,9 @@ describe("Pagination and Sorting", () => {
       // Verify sort order is maintained
       const selectedOption = await page.$eval(
         "#sort-by select.ais-SortBy-select",
-        (el) => el.options[el.selectedIndex].text
+        (el) => el.options[el.selectedIndex].text,
       );
-      
+
       expect(selectedOption).toBe("Price (asc)");
     });
   });
@@ -143,11 +126,8 @@ describe("Pagination and Sorting", () => {
     it("changes number of results displayed", async () => {
       // Get initial hit count (default is 8)
       await page.waitForSelector("#hits .ais-Hits-item");
-      const initialHitCount = await page.$$eval(
-        "#hits .ais-Hits-item",
-        (elements) => elements.length
-      );
-      
+      const initialHitCount = await page.$$eval("#hits .ais-Hits-item", (elements) => elements.length);
+
       expect(initialHitCount).toBe(8);
 
       // Change to 16 hits per page
@@ -157,10 +137,7 @@ describe("Pagination and Sorting", () => {
       await page.waitForTimeout(500);
 
       // Get new hit count
-      const newHitCount = await page.$$eval(
-        "#hits .ais-Hits-item",
-        (elements) => elements.length
-      );
+      const newHitCount = await page.$$eval("#hits .ais-Hits-item", (elements) => elements.length);
 
       expect(newHitCount).toBe(16);
     });
@@ -170,7 +147,7 @@ describe("Pagination and Sorting", () => {
       await page.waitForSelector("#pagination a.ais-Pagination-link");
       const initialPageCount = await page.$$eval(
         "#pagination a.ais-Pagination-link:not([aria-label='Previous']):not([aria-label='Next'])",
-        (elements) => elements.length
+        (elements) => elements.length,
       );
 
       // Change to 16 hits per page
@@ -182,7 +159,7 @@ describe("Pagination and Sorting", () => {
       // Get new page count
       const newPageCount = await page.$$eval(
         "#pagination a.ais-Pagination-link:not([aria-label='Previous']):not([aria-label='Next'])",
-        (elements) => elements.length
+        (elements) => elements.length,
       );
 
       // Should have fewer pages with more hits per page
@@ -194,15 +171,12 @@ describe("Pagination and Sorting", () => {
     it("loads more results when show more is clicked", async () => {
       // Get initial count of infinite hits
       await page.waitForSelector("#infinite-hits .ais-InfiniteHits-item");
-      const initialCount = await page.$$eval(
-        "#infinite-hits .ais-InfiniteHits-item",
-        (elements) => elements.length
-      );
+      const initialCount = await page.$$eval("#infinite-hits .ais-InfiniteHits-item", (elements) => elements.length);
 
       // Check if "Show more" button exists
       const hasShowMore = await page.$eval(
         "#infinite-hits",
-        (el) => !!el.querySelector("button.ais-InfiniteHits-loadMore")
+        (el) => !!el.querySelector("button.ais-InfiniteHits-loadMore"),
       );
 
       if (hasShowMore) {
@@ -213,10 +187,7 @@ describe("Pagination and Sorting", () => {
         await page.waitForTimeout(500);
 
         // Get new count
-        const newCount = await page.$$eval(
-          "#infinite-hits .ais-InfiniteHits-item",
-          (elements) => elements.length
-        );
+        const newCount = await page.$$eval("#infinite-hits .ais-InfiniteHits-item", (elements) => elements.length);
 
         // Should have more items
         expect(newCount).toBeGreaterThan(initialCount);
