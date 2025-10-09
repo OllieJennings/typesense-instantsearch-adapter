@@ -40,13 +40,6 @@ export class SearchRequestAdapter {
     // Check if this is a joined relation filter (e.g., "$product_prices(retailer)")
     const joinedRelationMatch = fieldName.match(this.constructor.JOINED_RELATION_FILTER_REGEX);
 
-    let collection, fieldPath;
-    if (joinedRelationMatch) {
-      // This is a joined relation filter
-      collection = joinedRelationMatch[1]; // e.g., "$product_prices"
-      fieldPath = joinedRelationMatch[2]; // e.g., "retailer"
-    }
-
     const operator = this._shouldUseExactMatchForField(fieldName, collectionName)
       ? isExcluded
         ? ":!="
@@ -56,6 +49,9 @@ export class SearchRequestAdapter {
         : ":";
 
     if (joinedRelationMatch) {
+      // This is a joined relation filter
+      const collection = joinedRelationMatch[1]; // e.g., "$product_prices"
+      const fieldPath = joinedRelationMatch[2]; // e.g., "retailer"
       // For joined relations, the filter should be: $collection(field:=[value1,value2])
       return `${collection}(${fieldPath}${operator}[${fieldValues.map((v) => this._escapeFacetValue(v)).join(",")}])`;
     } else {
