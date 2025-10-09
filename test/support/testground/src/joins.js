@@ -33,7 +33,7 @@ const searchClient = typesenseInstantsearchAdapter.searchClient;
 
 const search = instantsearch({
   searchClient,
-  indexName: "products_with_prices",
+  indexName: "products",
   routing: true,
 });
 
