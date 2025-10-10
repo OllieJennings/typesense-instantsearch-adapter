@@ -37,7 +37,7 @@ export class SearchRequestAdapter {
   }
 
   _buildFacetFilterString({ fieldName, fieldValues, isExcluded, collectionName }) {
-    // Check if this is a joined relation filter (e.g., "$product_prices(retailer)")
+    // Check if this is a joined relation filter (e.g., "$refCollection(retailer)")
     const joinedRelationMatch = fieldName.match(this.constructor.JOINED_RELATION_FILTER_REGEX);
 
     const operator = this._shouldUseExactMatchForField(fieldName, collectionName)
@@ -48,9 +48,9 @@ export class SearchRequestAdapter {
         ? ":!"
         : ":";
 
-    if (joinedRelationMatch) {
+    if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
       // This is a joined relation filter
-      const collection = joinedRelationMatch[1]; // e.g., "$product_prices"
+      const collection = joinedRelationMatch[1]; // e.g., "$refCollection"
       const fieldPath = joinedRelationMatch[2]; // e.g., "retailer"
       // For joined relations, the filter should be: $collection(field:=[value1,value2])
       return `${collection}(${fieldPath}${operator}[${fieldValues.map((v) => this._escapeFacetValue(v)).join(",")}])`;
@@ -291,18 +291,18 @@ export class SearchRequestAdapter {
     //  "field1:=[634..289] && field2:<=5 && field3:>=3"
     const adaptedFilters = [];
     Object.keys(filtersHash).forEach((field) => {
-      // Check if this is a joined relation filter (e.g., "$product_prices(price.current)")
+      // Check if this is a joined relation filter (e.g., "$refCollection(price.current)")
       const joinedRelationMatch = field.match(this.constructor.JOINED_RELATION_FILTER_REGEX);
 
       let collection, fieldPath;
-      if (joinedRelationMatch) {
+      if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
         // This is a joined relation filter
-        collection = joinedRelationMatch[1]; // e.g., "$product_prices"
+        collection = joinedRelationMatch[1]; // e.g., "$refCollection"
         fieldPath = joinedRelationMatch[2]; // e.g., "price.current"
       }
 
       if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
-        if (joinedRelationMatch) {
+        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
           adaptedFilters.push(
             `${collection}(${fieldPath}:=[${filtersHash[field][">="]}..${filtersHash[field]["<="]}])`,
           );
@@ -310,19 +310,19 @@ export class SearchRequestAdapter {
           adaptedFilters.push(`${field}:=[${filtersHash[field][">="]}..${filtersHash[field]["<="]}]`);
         }
       } else if (filtersHash[field]["<="] != null) {
-        if (joinedRelationMatch) {
+        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
           adaptedFilters.push(`${collection}(${fieldPath}:<=${filtersHash[field]["<="]})`);
         } else {
           adaptedFilters.push(`${field}:<=${filtersHash[field]["<="]}`);
         }
       } else if (filtersHash[field][">="] != null) {
-        if (joinedRelationMatch) {
+        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
           adaptedFilters.push(`${collection}(${fieldPath}:>=${filtersHash[field][">="]})`);
         } else {
           adaptedFilters.push(`${field}:>=${filtersHash[field][">="]}`);
         }
       } else if (filtersHash[field]["="] != null) {
-        if (joinedRelationMatch) {
+        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
           adaptedFilters.push(`${collection}(${fieldPath}:=${filtersHash[field]["="]})`);
         } else {
           adaptedFilters.push(`${field}:=${filtersHash[field]["="]}`);
