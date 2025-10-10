@@ -481,38 +481,35 @@ var SearchRequestAdapter = /*#__PURE__*/function () {
       Object.keys(filtersHash).forEach(function (field) {
         // Check if this is a joined relation filter (e.g., "$refCollection(price.current)")
         var joinedRelationMatch = field.match(_this3.constructor.JOINED_RELATION_FILTER_REGEX);
-        var collection, fieldPath;
         if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
           // This is a joined relation filter
-          collection = joinedRelationMatch[1]; // e.g., "$refCollection"
-          fieldPath = joinedRelationMatch[2]; // e.g., "price.current"
-        }
-        if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
-          if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+          var collection = joinedRelationMatch[1]; // e.g., "$refCollection"
+          var fieldPath = joinedRelationMatch[2]; // e.g., "price.current"
+
+          if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
             adaptedFilters.push("".concat(collection, "(").concat(fieldPath, ":=[").concat(filtersHash[field][">="], "..").concat(filtersHash[field]["<="], "])"));
-          } else {
-            adaptedFilters.push("".concat(field, ":=[").concat(filtersHash[field][">="], "..").concat(filtersHash[field]["<="], "]"));
-          }
-        } else if (filtersHash[field]["<="] != null) {
-          if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+          } else if (filtersHash[field]["<="] != null) {
             adaptedFilters.push("".concat(collection, "(").concat(fieldPath, ":<=").concat(filtersHash[field]["<="], ")"));
-          } else {
-            adaptedFilters.push("".concat(field, ":<=").concat(filtersHash[field]["<="]));
-          }
-        } else if (filtersHash[field][">="] != null) {
-          if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+          } else if (filtersHash[field][">="] != null) {
             adaptedFilters.push("".concat(collection, "(").concat(fieldPath, ":>=").concat(filtersHash[field][">="], ")"));
-          } else {
-            adaptedFilters.push("".concat(field, ":>=").concat(filtersHash[field][">="]));
-          }
-        } else if (filtersHash[field]["="] != null) {
-          if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+          } else if (filtersHash[field]["="] != null) {
             adaptedFilters.push("".concat(collection, "(").concat(fieldPath, ":=").concat(filtersHash[field]["="], ")"));
           } else {
-            adaptedFilters.push("".concat(field, ":=").concat(filtersHash[field]["="]));
+            console.warn("[Typesense-Instantsearch-Adapter] Unsupported operator found ".concat(JSON.stringify(filtersHash[field])));
           }
         } else {
-          console.warn("[Typesense-Instantsearch-Adapter] Unsupported operator found ".concat(JSON.stringify(filtersHash[field])));
+          // Regular field filter (non-joined)
+          if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
+            adaptedFilters.push("".concat(field, ":=[").concat(filtersHash[field][">="], "..").concat(filtersHash[field]["<="], "]"));
+          } else if (filtersHash[field]["<="] != null) {
+            adaptedFilters.push("".concat(field, ":<=").concat(filtersHash[field]["<="]));
+          } else if (filtersHash[field][">="] != null) {
+            adaptedFilters.push("".concat(field, ":>=").concat(filtersHash[field][">="]));
+          } else if (filtersHash[field]["="] != null) {
+            adaptedFilters.push("".concat(field, ":=").concat(filtersHash[field]["="]));
+          } else {
+            console.warn("[Typesense-Instantsearch-Adapter] Unsupported operator found ".concat(JSON.stringify(filtersHash[field])));
+          }
         }
       });
       adaptedResult = adaptedFilters.join(" && ");

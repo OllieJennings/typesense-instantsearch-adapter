@@ -294,43 +294,41 @@ export class SearchRequestAdapter {
       // Check if this is a joined relation filter (e.g., "$refCollection(price.current)")
       const joinedRelationMatch = field.match(this.constructor.JOINED_RELATION_FILTER_REGEX);
 
-      let collection, fieldPath;
       if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
         // This is a joined relation filter
-        collection = joinedRelationMatch[1]; // e.g., "$refCollection"
-        fieldPath = joinedRelationMatch[2]; // e.g., "price.current"
-      }
+        const collection = joinedRelationMatch[1]; // e.g., "$refCollection"
+        const fieldPath = joinedRelationMatch[2]; // e.g., "price.current"
 
-      if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
-        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+        if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
           adaptedFilters.push(
             `${collection}(${fieldPath}:=[${filtersHash[field][">="]}..${filtersHash[field]["<="]}])`,
           );
-        } else {
-          adaptedFilters.push(`${field}:=[${filtersHash[field][">="]}..${filtersHash[field]["<="]}]`);
-        }
-      } else if (filtersHash[field]["<="] != null) {
-        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+        } else if (filtersHash[field]["<="] != null) {
           adaptedFilters.push(`${collection}(${fieldPath}:<=${filtersHash[field]["<="]})`);
-        } else {
-          adaptedFilters.push(`${field}:<=${filtersHash[field]["<="]}`);
-        }
-      } else if (filtersHash[field][">="] != null) {
-        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+        } else if (filtersHash[field][">="] != null) {
           adaptedFilters.push(`${collection}(${fieldPath}:>=${filtersHash[field][">="]})`);
-        } else {
-          adaptedFilters.push(`${field}:>=${filtersHash[field][">="]}`);
-        }
-      } else if (filtersHash[field]["="] != null) {
-        if (joinedRelationMatch && joinedRelationMatch.length >= 3) {
+        } else if (filtersHash[field]["="] != null) {
           adaptedFilters.push(`${collection}(${fieldPath}:=${filtersHash[field]["="]})`);
         } else {
-          adaptedFilters.push(`${field}:=${filtersHash[field]["="]}`);
+          console.warn(
+            `[Typesense-Instantsearch-Adapter] Unsupported operator found ${JSON.stringify(filtersHash[field])}`,
+          );
         }
       } else {
-        console.warn(
-          `[Typesense-Instantsearch-Adapter] Unsupported operator found ${JSON.stringify(filtersHash[field])}`,
-        );
+        // Regular field filter (non-joined)
+        if (filtersHash[field]["<="] != null && filtersHash[field][">="] != null) {
+          adaptedFilters.push(`${field}:=[${filtersHash[field][">="]}..${filtersHash[field]["<="]}]`);
+        } else if (filtersHash[field]["<="] != null) {
+          adaptedFilters.push(`${field}:<=${filtersHash[field]["<="]}`);
+        } else if (filtersHash[field][">="] != null) {
+          adaptedFilters.push(`${field}:>=${filtersHash[field][">="]}`);
+        } else if (filtersHash[field]["="] != null) {
+          adaptedFilters.push(`${field}:=${filtersHash[field]["="]}`);
+        } else {
+          console.warn(
+            `[Typesense-Instantsearch-Adapter] Unsupported operator found ${JSON.stringify(filtersHash[field])}`,
+          );
+        }
       }
     });
 
