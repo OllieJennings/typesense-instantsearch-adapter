@@ -34,7 +34,7 @@ export class SearchRequestAdapter {
     }
   }
 
-  _buildFacetFilterString(fieldName, fieldValues, isExcluded, collectionName) {
+  _buildFacetFilterString({ fieldName, fieldValues, isExcluded, collectionName }) {
     // Check if this is a joined relation filter (e.g., "$product_prices(retailer)")
     const joinedRelationMatch = fieldName.match(this.constructor.JOINED_RELATION_FILTER_REGEX);
 
@@ -135,12 +135,22 @@ export class SearchRequestAdapter {
         const typesenseFilterStringComponents = [];
         if (includedFieldValues.length > 0) {
           typesenseFilterStringComponents.push(
-            this._buildFacetFilterString(fieldName, includedFieldValues, false, collectionName),
+            this._buildFacetFilterString({
+              fieldName,
+              fieldValues: includedFieldValues,
+              isExcluded: false,
+              collectionName,
+            }),
           );
         }
         if (excludedFieldValues.length > 0) {
           typesenseFilterStringComponents.push(
-            this._buildFacetFilterString(fieldName, excludedFieldValues, true, collectionName),
+            this._buildFacetFilterString({
+              fieldName,
+              fieldValues: excludedFieldValues,
+              isExcluded: true,
+              collectionName,
+            }),
           );
         }
 
@@ -156,14 +166,19 @@ export class SearchRequestAdapter {
         const { fieldName, fieldValue } = this._parseFacetFilter(item);
         let typesenseFilterString;
         if (fieldValue.startsWith("-") && !this._isNumber(fieldValue)) {
-          typesenseFilterString = this._buildFacetFilterString(
+          typesenseFilterString = this._buildFacetFilterString({
             fieldName,
-            [fieldValue.substring(1)],
-            true,
+            fieldValues: [fieldValue.substring(1)],
+            isExcluded: true,
             collectionName,
-          );
+          });
         } else {
-          typesenseFilterString = this._buildFacetFilterString(fieldName, [fieldValue], false, collectionName);
+          typesenseFilterString = this._buildFacetFilterString({
+            fieldName,
+            fieldValues: [fieldValue],
+            isExcluded: false,
+            collectionName,
+          });
         }
 
         return typesenseFilterString;
