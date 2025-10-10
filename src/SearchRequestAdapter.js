@@ -13,10 +13,6 @@ export class SearchRequestAdapter {
     return new RegExp("(.*?)(<=|>=|>|<|=)(.*)");
   }
 
-  static get JOINED_RELATION_FILTER_REGEX() {
-    return /^(\$[^(]+)\(([^)]+)\)$/;
-  }
-
   constructor(instantsearchRequests, typesenseClient, configuration) {
     this.instantsearchRequests = instantsearchRequests;
     this.typesenseClient = typesenseClient;
@@ -554,3 +550,5 @@ export class SearchRequestAdapter {
     return this.typesenseClient.multiSearch.perform(searchRequest, commonParams);
   }
 }
+
+SearchRequestAdapter.JOINED_RELATION_FILTER_REGEX = /^(\$[^(]+)\(([^)]+)\)$/;
