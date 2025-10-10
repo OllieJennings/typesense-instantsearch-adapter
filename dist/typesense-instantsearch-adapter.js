@@ -153,7 +153,7 @@ var FacetSearchResponseAdapter = /*#__PURE__*/function () {
       var facet = typesenseFacetCounts.find(function (facet) {
         return facet.field_name === _this.instantsearchRequest.params.facetName;
       });
-      if (typeof facet !== "undefined") {
+      if (typeof facet !== 'undefined') {
         adaptedResult = facet.counts.map(function (facetCount) {
           return {
             value: facetCount.value,
