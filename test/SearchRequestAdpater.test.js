@@ -284,7 +284,7 @@ describe("SearchRequestAdapter", () => {
           ["$product_prices(retailer):value1", "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:=[`value1`] && status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:=[`value1`]) && $product_prices(status:=[`active`])");
       });
 
       it("adapts joined relation filters for array values (OR)", () => {
@@ -294,7 +294,7 @@ describe("SearchRequestAdapter", () => {
           [["$product_prices(retailer):value1", "$product_prices(retailer):value2"], "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`] && status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`]) && $product_prices(status:=[`active`])");
       });
 
       it("adapts joined relation filters with excluded values", () => {
@@ -304,7 +304,7 @@ describe("SearchRequestAdapter", () => {
           ["$product_prices(retailer):-value1", "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:!=[`value1`] && status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:!=[`value1`]) && $product_prices(status:=[`active`])");
       });
 
       it("adapts joined relation filters with both included and excluded values", () => {
@@ -320,7 +320,9 @@ describe("SearchRequestAdapter", () => {
           ],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`] && retailer:!=[`value3`])");
+        expect(result).toEqual(
+          "$product_prices(retailer:=[`value1`,`value2`]) && $product_prices(retailer:!=[`value3`])",
+        );
       });
 
       it("adapts joined relation filters with exactMatch disabled", () => {
