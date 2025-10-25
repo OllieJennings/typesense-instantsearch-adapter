@@ -161,6 +161,38 @@ describe("SearchRequestAdapter", () => {
         const result = subject._adaptNumericFilters(["$product_prices(quantity)=5"]);
         expect(result).toEqual("$product_prices(quantity:=5)");
       });
+
+      it("groups multiple numeric filters from the same join collection", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptNumericFilters([
+          "$product_prices(price.current)>=100",
+          "$product_prices(quantity)=5",
+        ]);
+        expect(result).toEqual("$product_prices(price.current:>=100 && quantity:=5)");
+      });
+
+      it("groups numeric join filters separately from regular numeric filters", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptNumericFilters([
+          "$product_prices(price.current)>=100",
+          "rating>=4",
+          "$product_prices(quantity)=5",
+        ]);
+        expect(result).toEqual("$product_prices(price.current:>=100 && quantity:=5) && rating:>=4");
+      });
+
+      it("groups multiple different join collections separately for numeric filters", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptNumericFilters([
+          "$product_prices(price.current)>=100",
+          "$product_reviews(rating)>=4",
+          "$product_prices(quantity)=5",
+        ]);
+        expect(result).toEqual("$product_prices(price.current:>=100 && quantity:=5) && $product_reviews(rating:>=4)");
+      });
     });
   });
 
@@ -250,7 +282,7 @@ describe("SearchRequestAdapter", () => {
           ["$product_prices(retailer):value1", "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:=[`value1`]) && $product_prices(status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:=[`value1`] && status:=[`active`])");
       });
 
       it("adapts joined relation filters for array values (OR)", () => {
@@ -260,7 +292,7 @@ describe("SearchRequestAdapter", () => {
           [["$product_prices(retailer):value1", "$product_prices(retailer):value2"], "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`]) && $product_prices(status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`] && status:=[`active`])");
       });
 
       it("adapts joined relation filters with excluded values", () => {
@@ -270,7 +302,7 @@ describe("SearchRequestAdapter", () => {
           ["$product_prices(retailer):-value1", "$product_prices(status):active"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(retailer:!=[`value1`]) && $product_prices(status:=[`active`])");
+        expect(result).toEqual("$product_prices(retailer:!=[`value1`] && status:=[`active`])");
       });
 
       it("adapts joined relation filters with both included and excluded values", () => {
@@ -286,9 +318,7 @@ describe("SearchRequestAdapter", () => {
           ],
           "collection1",
         );
-        expect(result).toEqual(
-          "$product_prices(retailer:=[`value1`,`value2`]) && $product_prices(retailer:!=[`value3`])",
-        );
+        expect(result).toEqual("$product_prices(retailer:=[`value1`,`value2`] && retailer:!=[`value3`])");
       });
 
       it("adapts joined relation filters with exactMatch disabled", () => {
@@ -312,7 +342,44 @@ describe("SearchRequestAdapter", () => {
           ["$product_prices(price.current):100", "$product_prices(price.original):200"],
           "collection1",
         );
-        expect(result).toEqual("$product_prices(price.current:=[100]) && $product_prices(price.original:=[200])");
+        expect(result).toEqual("$product_prices(price.current:=[100] && price.original:=[200])");
+      });
+
+      it("groups multiple join filters from the same collection", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptFacetFilters(
+          ["$product_prices(retailer):Amazon", "$product_prices(status):active", "$product_prices(type):new"],
+          "collection1",
+        );
+        expect(result).toEqual("$product_prices(retailer:=[`Amazon`] && status:=[`active`] && type:=[`new`])");
+      });
+
+      it("groups join filters separately from regular filters", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptFacetFilters(
+          ["$product_prices(retailer):Amazon", "brand:Apple", "$product_prices(status):active"],
+          "collection1",
+        );
+        expect(result).toEqual("$product_prices(retailer:=[`Amazon`] && status:=[`active`]) && brand:=[`Apple`]");
+      });
+
+      it("groups multiple different join collections separately", () => {
+        const subject = new SearchRequestAdapter([], null, {});
+
+        const result = subject._adaptFacetFilters(
+          [
+            "$product_prices(retailer):Amazon",
+            "$product_reviews(rating):5",
+            "$product_prices(status):active",
+            "$product_reviews(verified):true",
+          ],
+          "collection1",
+        );
+        expect(result).toEqual(
+          "$product_prices(retailer:=[`Amazon`] && status:=[`active`]) && $product_reviews(rating:=[5] && verified:=[true])",
+        );
       });
     });
   });

@@ -187,7 +187,8 @@ export class SearchRequestAdapter {
       }
     });
 
-    adaptedResult = transformedTypesenseFilters.join(" && ");
+    // Group join filters by their collection
+    adaptedResult = this._groupJoinFilters(transformedTypesenseFilters);
     // console.log(`${JSON.stringify(facetFilters)} => ${adaptedResult}`);
 
     return adaptedResult;
@@ -254,6 +255,41 @@ export class SearchRequestAdapter {
       Number.isInteger(value % 1) || // Mod 1 will automatically try converting string values to integer/float
       !!(value % 1)
     ); // Is Float
+  }
+
+  _groupJoinFilters(filters) {
+    // Group join filters by their collection name
+    // Example: ["$product_prices(retailer:=[`value1`])", "$product_prices(status:=[`active`])", "brand:=[`Apple`]"]
+    // Should become: ["$product_prices(retailer:=[`value1`] && status:=[`active`])", "brand:=[`Apple`]"]
+
+    const joinFiltersMap = {};
+    const regularFilters = [];
+
+    filters.forEach((filter) => {
+      // Match pattern like "$collection(field:=value)" or "$collection(field:>=value)"
+      const joinMatch = filter.match(/^(\$[^(]+)\((.*)\)$/);
+
+      if (joinMatch && joinMatch.length >= 3) {
+        const collection = joinMatch[1]; // e.g., "$product_prices"
+        const innerFilter = joinMatch[2]; // e.g., "retailer:=[`value1`]"
+
+        if (!joinFiltersMap[collection]) {
+          joinFiltersMap[collection] = [];
+        }
+        joinFiltersMap[collection].push(innerFilter);
+      } else {
+        regularFilters.push(filter);
+      }
+    });
+
+    // Rebuild grouped join filters
+    const groupedJoinFilters = Object.keys(joinFiltersMap).map((collection) => {
+      const innerFilters = joinFiltersMap[collection].join(" && ");
+      return `${collection}(${innerFilters})`;
+    });
+
+    // Combine grouped join filters with regular filters
+    return [...groupedJoinFilters, ...regularFilters].filter((f) => f).join(" && ");
   }
 
   _adaptNumericFilters(numericFilters) {
@@ -332,7 +368,8 @@ export class SearchRequestAdapter {
       }
     });
 
-    adaptedResult = adaptedFilters.join(" && ");
+    // Group join filters by their collection
+    adaptedResult = this._groupJoinFilters(adaptedFilters);
     return adaptedResult;
   }
 
