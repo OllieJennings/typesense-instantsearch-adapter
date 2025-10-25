@@ -187,8 +187,7 @@ export class SearchRequestAdapter {
       }
     });
 
-    // Group join filters by their collection
-    adaptedResult = this._groupJoinFilters(transformedTypesenseFilters);
+    adaptedResult = transformedTypesenseFilters.join(" && ");
     // console.log(`${JSON.stringify(facetFilters)} => ${adaptedResult}`);
 
     return adaptedResult;
@@ -368,8 +367,7 @@ export class SearchRequestAdapter {
       }
     });
 
-    // Group join filters by their collection
-    adaptedResult = this._groupJoinFilters(adaptedFilters);
+    adaptedResult = adaptedFilters.join(" && ");
     return adaptedResult;
   }
 
@@ -469,7 +467,13 @@ export class SearchRequestAdapter {
     adaptedFilters.push(this._adaptNumericFilters(instantsearchParams.numericFilters));
     adaptedFilters.push(this._adaptGeoFilter(instantsearchParams));
 
-    return adaptedFilters.filter((filter) => filter && filter !== "").join(" && ");
+    // Filter out empty strings, split by && to get individual filters, then group join filters
+    const allFilters = adaptedFilters
+      .filter((filter) => filter && filter !== "")
+      .flatMap((filter) => filter.split(" && ").map((f) => f.trim()))
+      .filter((f) => f);
+
+    return this._groupJoinFilters(allFilters);
   }
 
   _adaptIndexName(indexName) {

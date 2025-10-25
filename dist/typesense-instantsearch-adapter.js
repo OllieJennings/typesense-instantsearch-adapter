@@ -153,7 +153,7 @@ var FacetSearchResponseAdapter = /*#__PURE__*/function () {
       var facet = typesenseFacetCounts.find(function (facet) {
         return facet.field_name === _this.instantsearchRequest.params.facetName;
       });
-      if (typeof facet !== 'undefined') {
+      if (typeof facet !== "undefined") {
         adaptedResult = facet.counts.map(function (facetCount) {
           return {
             value: facetCount.value,
@@ -375,9 +375,7 @@ var SearchRequestAdapter = /*#__PURE__*/function () {
           return _typesenseFilterString;
         }
       });
-
-      // Group join filters by their collection
-      adaptedResult = this._groupJoinFilters(transformedTypesenseFilters);
+      adaptedResult = transformedTypesenseFilters.join(" && ");
       // console.log(`${JSON.stringify(facetFilters)} => ${adaptedResult}`);
 
       return adaptedResult;
@@ -552,9 +550,7 @@ var SearchRequestAdapter = /*#__PURE__*/function () {
           }
         }
       });
-
-      // Group join filters by their collection
-      adaptedResult = this._groupJoinFilters(adaptedFilters);
+      adaptedResult = adaptedFilters.join(" && ");
       return adaptedResult;
     }
   }, {
@@ -666,9 +662,18 @@ var SearchRequestAdapter = /*#__PURE__*/function () {
       adaptedFilters.push(this._adaptFacetFilters(instantsearchParams.facetFilters, collectionName));
       adaptedFilters.push(this._adaptNumericFilters(instantsearchParams.numericFilters));
       adaptedFilters.push(this._adaptGeoFilter(instantsearchParams));
-      return adaptedFilters.filter(function (filter) {
+
+      // Filter out empty strings, split by && to get individual filters, then group join filters
+      var allFilters = adaptedFilters.filter(function (filter) {
         return filter && filter !== "";
-      }).join(" && ");
+      }).flatMap(function (filter) {
+        return filter.split(" && ").map(function (f) {
+          return f.trim();
+        });
+      }).filter(function (f) {
+        return f;
+      });
+      return this._groupJoinFilters(allFilters);
     }
   }, {
     key: "_adaptIndexName",
